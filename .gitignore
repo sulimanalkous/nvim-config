@@ -1,0 +1,20 @@
+# OS crap
+.DS_Store
+
+# Compiled files
+*.pyc
+*.class
+
+# Swap/backup files
+*.swp
+*.swo
+*.bak
+
+# LazyVim generated files
+lazy-lock.json
+lazy/
+
+# Plugin caches (optional)
+session/
+undodir/
+shada/lazy/

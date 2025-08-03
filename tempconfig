@@ -1,0 +1,70 @@
+
+return {
+  {
+    "olimorris/codecompanion.nvim",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-treesitter/nvim-treesitter",
+      "j-hui/fidget.nvim",
+    },
+    config = function()
+      local fidget = require("fidget")
+      fidget.setup({}) -- default setup
+
+      require("codecompanion").setup({
+        strategies = {
+          chat = {
+            adapter = "ollama",
+          },
+          inline = {
+            adapter = "ollama",
+            mode = "edit",
+          },
+          cmd = {
+            adapters = "ollama",
+          },
+        },
+
+        adapters = {
+          ollama = function()
+            return require("codecompanion.adapters").extend("openai_compatible", {
+              env = {
+                url = "http://localhost:1234",
+              },
+              on_request_start = function()
+                vim.schedule(function()
+                  fidget.notify("CodeCompanion: Thinking...", vim.log.levels.INFO, { title = "AI Assistant" })
+                end)
+              end,
+              on_request_success = function()
+                vim.schedule(function()
+                  fidget.notify("CodeCompanion: Done!", vim.log.levels.INFO, { title = "AI Assistant" })
+                end)
+              end,
+              on_request_error = function(err)
+                vim.schedule(function()
+                  fidget.notify("CodeCompanion: Failed — " .. (err.message or "unknown error"), vim.log.levels.ERROR, { title = "AI Assistant" })
+                end)
+              end,
+            })
+          end,
+        },
+      })
+
+      -- Keybindings
+      vim.keymap.set("n", "<leader>cc", ":CodeCompanionChatToggle<CR>", { desc = "Toggle AI Chat" })
+      vim.keymap.set("v", "<leader>ca", ":CodeCompanionInlineAction<CR>", { desc = "AI Inline Fix" })
+    end,
+  },
+
+  {
+    "MeanderingProgrammer/render-markdown.nvim",
+    ft = { "markdown", "codecompanion" },
+  },
+
+  {
+    "j-hui/fidget.nvim",
+    opts = {},
+  },
+}
+

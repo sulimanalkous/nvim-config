@@ -9,6 +9,7 @@ return {
       "L3MON4D3/LuaSnip",         -- Snippets engine
       "saadparwaiz1/cmp_luasnip", -- Snippet completion
       "rafamadriz/friendly-snippets", -- Pre-configured snippets
+      "tzachar/cmp-ai",           -- AI completion with DeepSeek
     },
     config = function()
       local cmp = require("cmp")
@@ -22,10 +23,6 @@ return {
           expand = function(args)
             luasnip.lsp_expand(args.body) -- Use LuaSnip for snippet expansion
           end,
-          ources = {
-            { name = "nvim_lsp" },
-            -- add more if needed
-          },
         },
         mapping = cmp.mapping.preset.insert({
           ["<C-Space>"] = cmp.mapping.complete(), -- Trigger completion
@@ -39,6 +36,23 @@ return {
               fallback()
             end
           end, { "i", "s" }),
+          ["<C-y>"] = cmp.mapping.confirm({ select = true }), -- Alternative accept key
+          ["<C-e>"] = cmp.mapping(function(fallback)
+            -- Prefer AI completion if available
+            local entries = cmp.get_entries()
+            for _, entry in ipairs(entries) do
+              if entry.source.name == "cmp_ai" then
+                cmp.confirm({ select = false })
+                return
+              end
+            end
+            -- Otherwise use normal confirm
+            if cmp.visible() then
+              cmp.confirm({ select = true })
+            else
+              fallback()
+            end
+          end, { "i" }), -- AI-focused accept key
           ["<S-Tab>"] = cmp.mapping(function(fallback)
             if cmp.visible() then
               cmp.select_prev_item()
@@ -51,6 +65,7 @@ return {
         }),
         sources = cmp.config.sources({
           { name = "nvim_lsp" }, -- LSP-based completion
+          { name = "cmp_ai" },   -- AI completion with DeepSeek
           { name = "luasnip" }, -- Snippets
           { name = "buffer" }, -- Text from open buffers
           { name = "path" }, -- File path completion
@@ -59,6 +74,7 @@ return {
           format = function(entry, vim_item)
             vim_item.menu = ({
               nvim_lsp = "[LSP]",
+              cmp_ai = "[AI]",
               luasnip = "[Snippet]",
               buffer = "[Buffer]",
               path = "[Path]",

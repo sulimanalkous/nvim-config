@@ -1,0 +1,84 @@
+{
+  "name": "Personal Neovim Configuration",
+  "version": "1.0.0",
+  "system_prompt": "This is a personal Neovim configuration powered by Lazy.nvim plugin manager, turning Neovim into a modern IDE. The configuration is structured with modular plugin files and includes LSP support for multiple languages including Rust, TypeScript, Python, and Tailwind CSS. Key features include file explorer (neo-tree), fuzzy finder (telescope), syntax highlighting (treesitter), and AI assistance (codecompanion).",
+  "groups": [
+    {
+      "name": "Core Configuration",
+      "system_prompt": "The core configuration files that set up the basic Neovim environment and plugin management. This includes the main entry point, vim options, and plugin loading system.",
+      "data": ["init-lua", "vim-options", "plugins-lua", "claude-md"]
+    },
+    {
+      "name": "LSP Configuration", 
+      "system_prompt": "Language Server Protocol configuration for code intelligence, completion, and diagnostics across multiple programming languages.",
+      "data": ["lsp-legacy", "lsp-config"]
+    },
+    {
+      "name": "Plugin Configurations",
+      "system_prompt": "Individual plugin configurations organized by functionality, including UI themes, file navigation, fuzzy finding, syntax highlighting, and AI assistance.",
+      "data": ["codecompanion-config", "telescope-config", "treesitter-config", "neo-tree-config", "catppuccin-theme", "lualine-config"]
+    }
+  ],
+  "data": {
+    "init-lua": {
+      "type": "file",
+      "path": "init.lua",
+      "description": "Main entry point that loads vim options, initializes lazy.nvim plugin manager, and sets up global format-on-save functionality."
+    },
+    "vim-options": {
+      "type": "file", 
+      "path": "lua/vim-options.lua",
+      "description": "Core Neovim settings including tabs, line numbers, leader key configuration (comma), and basic editor behavior."
+    },
+    "plugins-lua": {
+      "type": "file",
+      "path": "lua/plugins.lua", 
+      "description": "Basic plugin list including plenary (utility functions), fugitive (git integration), and auto-pairs for bracket completion."
+    },
+    "claude-md": {
+      "type": "file",
+      "path": "CLAUDE.md",
+      "description": "Project documentation and guidance for Claude Code AI assistant, containing architecture overview, key bindings, and development workflow instructions."
+    },
+    "lsp-legacy": {
+      "type": "file",
+      "path": "lsp.lua",
+      "description": "Legacy LSP configuration with basic language server setups. Partially superseded by the modern plugin-based configuration."
+    },
+    "lsp-config": {
+      "type": "file", 
+      "path": "lua/plugins/lsp-config.lua",
+      "description": "Modern LSP configuration with detailed settings for rust-analyzer, TypeScript, Python (pyright), and Tailwind CSS language servers."
+    },
+    "codecompanion-config": {
+      "type": "file",
+      "path": "lua/plugins/codecompanion.lua", 
+      "description": "AI assistant configuration using local LLM (qwen2.5-coder) with custom tools, keybindings, and project context awareness."
+    },
+    "telescope-config": {
+      "type": "file",
+      "path": "lua/plugins/telescope.lua",
+      "description": "Fuzzy finder configuration for file search (Ctrl+P) and live grep functionality with custom keybindings."
+    },
+    "treesitter-config": {
+      "type": "file", 
+      "path": "lua/plugins/treesitter.lua",
+      "description": "Syntax highlighting configuration with automatic installation of all available parsers for comprehensive language support."
+    },
+    "neo-tree-config": {
+      "type": "file",
+      "path": "lua/plugins/neo-tree.lua", 
+      "description": "File explorer configuration with tree view, file operations, and Ctrl+N toggle functionality."
+    },
+    "catppuccin-theme": {
+      "type": "file",
+      "path": "lua/plugins/catppuccin.lua",
+      "description": "Color scheme configuration using the Catppuccin theme with mocha flavor for consistent UI styling."
+    },
+    "lualine-config": {
+      "type": "file",
+      "path": "lua/plugins/lualine.lua", 
+      "description": "Status line configuration using Lualine with Dracula theme for file information, git status, and LSP diagnostics display."
+    }
+  }
+}

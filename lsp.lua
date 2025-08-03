@@ -1,7 +1,6 @@
 local lspconfig = require("lspconfig")
 
 lspconfig.rust_analyzer.setup({})
-lspconfig.tsserver.setup({})
 lspconfig.pyright.setup({})
 lspconfig.solargraph.setup({})
 lspconfig.jdtls.setup({})

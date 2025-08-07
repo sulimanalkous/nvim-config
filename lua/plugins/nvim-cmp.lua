@@ -65,7 +65,7 @@ return {
         }),
         sources = cmp.config.sources({
           { name = "nvim_lsp" }, -- LSP-based completion
-          { name = "cmp_ai" },   -- AI completion with DeepSeek
+          -- { name = "cmp_ai" },   -- AI completion temporarily disabled for neoai testing
           { name = "luasnip" }, -- Snippets
           { name = "buffer" }, -- Text from open buffers
           { name = "path" }, -- File path completion

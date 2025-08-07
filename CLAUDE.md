@@ -83,7 +83,38 @@ Required external tools (install manually):
 - Check LSP status with `:LspInfo`
 - Restart Neovim after major configuration changes
 
+#### AI Coding Assistant
+- **Avante.nvim**: AI-powered coding assistant with local model support
+  - Custom llama provider for llama-server integration
+  - Configured with Qwen2.5-Coder-7B-Instruct for optimal coding performance
+  - Auto-detection of running models from llama-server process
+  - 32K context length for large code understanding
+  - Key bindings:
+    - `<leader>aa` - Ask/chat mode with AI
+    - `<leader>ae` - Edit selected code with AI
+    - `ct` - Accept AI suggestions (theirs)
+    - `co` - Keep original code (ours)
+    - `ca` - Accept all AI changes
+    - `cb` - Accept both versions
+    - `<leader>ar` - Refresh AI context
+
+### AI Setup Requirements
+- **llama-server**: Local model serving on port 1234
+- **Recommended model**: Qwen2.5-Coder-7B-Instruct for best coding performance
+- **Alternative models**: deepseek-coder, phi4, mistral-7b-instruct
+- **Context length**: 32K tokens configured for large code files
+
+### AI Workflow
+1. **Start llama-server** with your preferred model on port 1234
+2. **Auto-detection** will identify the running model automatically
+3. **Use chat mode** (`<leader>aa`) for explanations and complex queries
+4. **Use edit mode** (`<leader>ae`) for direct code modifications
+5. **Review and apply** changes using `ct` (accept) or `co` (reject)
+
 ## Notes
+- Avante.nvim includes custom llama provider with line number cleaning
+- The provider supports both streaming and non-streaming responses
+- Tool calling capabilities are available for advanced AI interactions
 - Some configuration exists in both `lsp.lua` and `lua/plugins/lsp-config.lua` - the plugins version is more current
 - Treesitter installs all parsers by default (`ensure_installed = "all"`)
 - Format-on-save is globally enabled for all file types

@@ -26,7 +26,7 @@ else is pure git or compiles itself, which is why it's identical everywhere.
 # 1. Install Neovim (>= 0.10) and Node.js (for npm) if you don't have them
 
 # 2. Put this config in place
-git clone <this-repo-url> ~/.config/nvim
+git clone https://github.com/sulimanalkous/nvim-config.git ~/.config/nvim
 
 # 3. One-time LSP servers (optional but recommended)
 cd ~/.config/nvim && ./bootstrap.sh
@@ -56,21 +56,38 @@ it just starts working on the next launch.
 
 ## Keybindings
 
-Leader key is `,` — press it and **which-key** pops up every binding.
-Press `,?` any time to see all keymaps. Nothing to memorize.
+Leader key is **space** — press it and **which-key** pops up every binding.
+Press `<space>?` any time to see all keymaps. Nothing to memorize.
+
+The config is built for **Emacs muscle memory**, so the real Emacs chords work
+too: `C-x` is the prefix, exactly like in Emacs.
 
 | Key | Action |
 |---|---|
+| `C-x C-f` | find file |
+| `C-x b` | buffer list (fuzzy, like `switch-to-buffer`) |
+| `C-x k` | kill this buffer, window stays |
+| `C-x LEFT` / `C-x RIGHT` | previous / next buffer (`C-x p` / `C-x n` too) |
+| `C-x C-s` / `C-x s` | save this buffer / save all buffers |
+| `C-x 2` / `C-x 3` | split below / split right |
+| `C-x o` | other window |
+| `C-x 0` / `C-x 1` | close window / close other windows |
+| `<Esc><Esc>` in a terminal | leave terminal mode (the `<C-\><C-n>` way, typeable) |
 | `<C-p>` | find files |
-| `,fg` | live grep (search text in project) |
-| `,fb` | open buffer list |
-| `<C-n>` | file explorer |
+| `<space>fg` | live grep (search text in project) |
+| `<space>fb` | open buffer list |
+| `<C-n>` | toggle file explorer |
 | `gd` / `gr` / `K` | go to definition / references / hover |
-| `,e` | show diagnostics |
-| `,rn` | rename symbol |
-| `,ca` | code action |
+| `<space>e` | show diagnostics |
+| `<space>rn` | rename symbol |
+| `<space>ca` | code action |
+| `<space>tt` | pick a theme (live preview, remembered) |
+| `:Run <cmd>` | run a command, output in the error list (like `compile`) |
 | `gcc` / `gc<motion>` | comment line / block |
-| `,?` | show every keymap |
+| `<space>?` | show every keymap |
+
+Buffers behave like Emacs buffers: `hidden` is on, so a file you visited stays
+alive after you switch away, and switching never asks you to save first.
 
 ## Updating
 

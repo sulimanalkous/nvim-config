@@ -1,3 +1,4 @@
 # Local scratch (assistant session state, install scripts) — never committed
 .flux/
 .flux.summary.md
+*.bak

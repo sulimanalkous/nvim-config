@@ -12,10 +12,36 @@ return {
           vim.keymap.set("n", "gr", vim.lsp.buf.references, opts)
           vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
           vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, opts)
+          -- Inlay hints: the server's inferred types shown inline (zls, clangd),
+          -- drawn faint by quiet_inlay_hints() below. <leader>ch flips them in
+          -- every buffer; a file opened later follows the last choice because it
+          -- reads the vim.g flag here.
+          vim.lsp.inlay_hint.enable(vim.g.inlay_hints_enabled ~= false, { bufnr = args.buf })
+          vim.keymap.set("n", "<leader>ch", function()
+            local on = not vim.lsp.inlay_hint.is_enabled({ bufnr = args.buf })
+            vim.g.inlay_hints_enabled = on
+            vim.lsp.inlay_hint.enable(on)
+            vim.notify("inlay hints: " .. (on and "on" or "off"))
+          end, { buffer = args.buf, desc = "Toggle inline hints" })
           vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
           vim.keymap.set({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, opts)
         end,
       })
+
+      -- Inlay hints sit inside the code, so draw them like comments: low
+      -- contrast, no bold or italic. Re-applied when the colorscheme changes,
+      -- so it follows every theme instead of hardcoding a grey.
+      local function quiet_inlay_hints()
+        local comment = vim.api.nvim_get_hl(0, { name = "Comment", link = false })
+        vim.api.nvim_set_hl(0, "LspInlayHint", {
+          fg = comment.fg,
+          bg = nil,
+          bold = false,
+          italic = false,
+        })
+      end
+      quiet_inlay_hints()
+      vim.api.nvim_create_autocmd("ColorScheme", { callback = quiet_inlay_hints })
 
       -- Diagnostics UI
       vim.diagnostic.config({
@@ -30,6 +56,12 @@ return {
       -- never by mason. key = vim.lsp.config name, cmd = binary on PATH.
       -- Modern API (nvim 0.11+): vim.lsp.config + vim.lsp.enable.
       local servers = {
+        -- zls finds `zig` on PATH; build.zig marks the project root so
+        -- zls analyses the whole project instead of one loose file.
+        zls = {
+          cmd = { "zls" },
+          root_markers = { "build.zig", "build.zig.zon", ".git" },
+        },
         rust_analyzer = {
           cmd = { "rust-analyzer" },
           settings = {
@@ -105,6 +137,7 @@ return {
             cmd = opts.cmd,
             settings = opts.settings,
             init_options = opts.init_options,
+            root_markers = opts.root_markers,
           })
           vim.lsp.enable(name)
         end

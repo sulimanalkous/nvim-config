@@ -23,4 +23,8 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 require("vim-options")
+require("quickfix")
 require("lazy").setup("plugins")
+
+-- After the plugins are loaded: apply the saved theme and map <leader>tt.
+require("theme").setup()

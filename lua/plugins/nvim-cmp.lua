@@ -25,7 +25,10 @@ return {
         },
         mapping = cmp.mapping.preset.insert({
           ["<C-Space>"] = cmp.mapping.complete(),
-          ["<CR>"] = cmp.mapping.confirm({ select = true }),
+          -- Nothing is pre-selected: <CR> keeps making a newline, and <C-y>
+          -- accepts the item you picked with <Tab>. Typing a word and pressing
+          -- Enter then never inserts a completion by accident.
+          ["<CR>"] = cmp.mapping.confirm({ select = false }),
           ["<C-y>"] = cmp.mapping.confirm({ select = true }),
           ["<C-e>"] = cmp.mapping.abort(),
           ["<Tab>"] = cmp.mapping(function(fallback)

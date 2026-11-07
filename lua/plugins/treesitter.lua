@@ -8,11 +8,11 @@ return {
     -- highlight/indent are handled by nvim core (vim.treesitter).
     -- Install missing parsers on load; already-installed ones are skipped.
     require("nvim-treesitter").install({
-      "lua", "vim", "vimdoc", "bash", "json", "yaml", "toml",
-      "markdown", "markdown_inline",
-      "rust", "go", "c", "cpp", "python", "ruby", "java",
-      "javascript", "typescript", "tsx", "html", "css", "vue",
-      "latex",
+      "lua", "vim", "vimdoc", "query", "bash", "json", "yaml", "toml",
+      "markdown", "markdown_inline", "latex",
+      "c", "cpp", "rust", "go", "zig", "python", "ruby", "java",
+      "javascript", "typescript", "tsx", "html", "css", "vue", "svelte",
+      "elixir", "heex", "eex",
     })
   end,
 }

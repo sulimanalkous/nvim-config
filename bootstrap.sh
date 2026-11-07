@@ -37,17 +37,23 @@ if ! have cc && ! have clang && ! have gcc; then
   esac
 fi
 
-# --- Node tooling (JS/TS): same npm command on all three OSes -------------
+# --- Node tooling (JS/TS): bun preferred, npm as fallback ------------------
 # prettier            -> formatting (conform.nvim)
 # pyright             -> Python LSP
 # tailwindcss-language-server -> Tailwind CSS LSP
 # @volar/vue-language-server  -> Vue LSP (binary: vue-language-server)
-if ! have prettier || ! have pyright || ! have tailwindcss-language-server || ! have vue-language-server; then
-  if have npm; then
+# tree-sitter-cli     -> REQUIRED by nvim-treesitter main; without it :TSInstall
+#                        and every parser update fails
+NODE_PKGS="prettier pyright tailwindcss-language-server @volar/vue-language-server tree-sitter-cli"
+if ! have tree-sitter || ! have prettier || ! have pyright || ! have tailwindcss-language-server || ! have vue-language-server; then
+  if have bun; then
+    say "Installing JS/TS tooling via bun..."
+    bun install -g $NODE_PKGS
+  elif have npm; then
     say "Installing JS/TS tooling via npm..."
-    npm install -g prettier pyright tailwindcss-language-server @volar/vue-language-server
+    npm install -g $NODE_PKGS
   else
-    echo "!! npm not found — install Node.js (https://nodejs.org) first."
+    echo "!! neither bun nor npm found — install one (https://bun.sh) first."
   fi
 fi
 

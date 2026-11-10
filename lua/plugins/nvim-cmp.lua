@@ -69,6 +69,35 @@ return {
         },
       })
 
+      -- C3: c3lsp lists a module once per source file (std::io x40) and
+      -- sends some faults with an empty label. Show each name once.
+      local seen, seen_ctx = {}, nil
+      cmp.setup.filetype("c3", {
+        sources = cmp.config.sources({
+          {
+            name = "nvim_lsp",
+            entry_filter = function(entry, ctx)
+              if ctx ~= seen_ctx then
+                seen, seen_ctx = {}, ctx
+              end
+              local item = entry:get_completion_item()
+              if item.label == "" then
+                return false
+              end
+              local key = item.label .. "\0" .. tostring(item.kind)
+              if seen[key] then
+                return false
+              end
+              seen[key] = true
+              return true
+            end,
+          },
+          { name = "luasnip" },
+          { name = "buffer" },
+          { name = "path" },
+        }),
+      })
+
       -- Command-line completion (e.g. :help, :e)
       cmp.setup.cmdline(":", {
         mapping = cmp.mapping.preset.cmdline(),

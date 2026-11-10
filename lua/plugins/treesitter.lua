@@ -14,5 +14,14 @@ return {
       "javascript", "typescript", "tsx", "html", "css", "vue", "svelte",
       "elixir", "heex", "eex",
     })
+
+    -- Installing a parser does not turn it on: start tree-sitter highlighting
+    -- for every buffer whose language has a parser installed; languages
+    -- without one keep their regular vim syntax highlighting.
+    vim.api.nvim_create_autocmd("FileType", {
+      callback = function(args)
+        pcall(vim.treesitter.start, args.buf)
+      end,
+    })
   end,
 }

@@ -62,3 +62,36 @@ vim.api.nvim_create_autocmd("FileType", {
     end
   end,
 })
+
+-- c3lsp answers `initialize` only after indexing the stdlib (~2 s, since
+-- c3lsp-fresh clears its cache on every start), so it attaches late. If you
+-- were already typing `io::` or `std::` by then, nvim-cmp had no LSP source
+-- and does not ask again on its own. Worse, cmp-nvim-lsp only registers a new
+-- server on InsertEnter, so it stayed missing until your next insert. Once
+-- the server is in: register it with cmp now and re-open the menu.
+vim.api.nvim_create_autocmd("LspAttach", {
+  callback = function(args)
+    local client = vim.lsp.get_client_by_id(args.data.client_id)
+    if not client or client.name ~= "c3_lsp" then
+      return
+    end
+    vim.schedule(function()
+      local cmp = package.loaded.cmp
+      if not cmp or args.buf ~= vim.api.nvim_get_current_buf() then
+        return
+      end
+      if not vim.api.nvim_get_mode().mode:match("^i") then
+        return
+      end
+      local ok, cmp_lsp = pcall(require, "cmp_nvim_lsp")
+      if ok and cmp_lsp._on_insert_enter then
+        cmp_lsp._on_insert_enter()
+      end
+      local col = vim.api.nvim_win_get_cursor(0)[2]
+      local before = vim.api.nvim_get_current_line():sub(1, col)
+      if before:match("[%w_:.]$") then
+        cmp.complete()
+      end
+    end)
+  end,
+})

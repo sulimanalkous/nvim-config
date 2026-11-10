@@ -119,7 +119,8 @@ vim.api.nvim_create_autocmd("FileType", {
 -- has nothing for the language itself (fn, switch, defer, int, void...). For
 -- those, K shows the matching section of the official C3 manual instead,
 -- found by c3doc (~/.local/bin/c3doc, searches the installed C3's docs).
--- K twice enters the popup to scroll it, as with LSP hover.
+-- K twice enters the popup to scroll it, as with LSP hover. Operators are
+-- covered too (see operator_section below).
 local manual_section = {
   fn = "5_3_1 Regular functions", void = "3_2_2 Basic types",
   bool = "Booleans", ["true"] = "Booleans", ["false"] = "Booleans",
@@ -147,8 +148,79 @@ for _, t in ipairs({ "ichar", "char", "short", "ushort", "int", "uint", "long", 
   manual_section[t] = "Integer types"
 end
 
-local function show_manual(word)
-  local query = manual_section[word]
+-- Operators: K on `??`, `!!`, `::`, `..`, `+=`... (cursor on any of its
+-- characters). C3's own operators open their section; the C-like ones open
+-- the operator table (all operators, by precedence).
+local OPS = "Binary operators"
+local operator_section = {
+  ["??"] = "Return a default value if Optional is empty",
+  ["!!"] = "Force unwrapping expressions",
+  ["?:"] = OPS,
+  ["::"] = "Modules And Import Instead Of",
+  [".."] = "5_1_5 Slices",
+  ["..."] = "Splat",
+  ["=>"] = "5_3_4 Short function declaration syntax",
+  ["$$"] = "10_2_1 Builtin constants",
+  ["$"] = "Compile Time Execution",
+  ["@"] = "6_13_1 Built in attributes",
+  ["<*"] = "5_8_1 Doc contracts", ["*>"] = "5_8_1 Doc contracts",
+  ["+++"] = "Compile-time operators", ["&&&"] = "Compile-time operators",
+  ["|||"] = "Compile-time operators",
+  ["."] = "4_1_7 Member access using",
+}
+for _, op in ipairs({ "+", "-", "*", "/", "%", "<<", ">>", "&", "|", "^", "~",
+  "==", "!=", "<", "<=", ">", ">=", "&&", "||", "=", "+=", "-=", "*=", "/=",
+  "%=", "&=", "|=", "^=", "<<=", ">>=", "++", "--", "!", "?", ":" }) do
+  operator_section[op] = operator_section[op] or OPS
+end
+
+-- The operator under the cursor (longest match covering it), and the
+-- section to show. A few symbols mean different things by position.
+local function operator_at_cursor()
+  local line = vim.api.nvim_get_current_line()
+  local col = vim.api.nvim_win_get_cursor(0)[2] + 1
+  if not line:sub(col, col):match("[%p]") then
+    return nil
+  end
+  local best
+  for op in pairs(operator_section) do
+    local start = math.max(1, col - #op + 1)
+    for i = start, col do
+      if line:sub(i, i + #op - 1) == op and (not best or #op > #best.op) then
+        best = { op = op, s = i, e = i + #op - 1 }
+      end
+    end
+  end
+  if not best then
+    return nil
+  end
+  local before = line:sub(1, best.s - 1)
+  local after = line:sub(best.e + 1)
+  local op = best.op
+  if op == "!" and before:match("[%w_%)%]]$") then
+    return "Using the Rethrow operator" -- foo()! : pass the fault up
+  elseif op == "?" and before:match("[%w_%]%*]$") then
+    return "6_8_1 What is an Optional" -- int? : an Optional type
+  elseif op == "?" or (op == ":" and before:match("%?")) then
+    return "Ternary expression" -- a ? b : c
+  elseif op == ":" then
+    return nil -- `case 1:`, labels: nothing to explain
+  elseif (op == "*" or op == "&") and not before:match("[%w_%)%]]%s*$") then
+    return "5_1_9 Pointer types" -- prefix *p (deref), &x (address of)
+  elseif op == "$$" and after:match("^[%a_]") then
+    return "10_2_1 Builtin constants" -- $$LINE, $$FILE...
+  elseif op == "$" and after:match("^[%a_]") then
+    local word = after:match("^[%w_]+")
+    return (word == "if" or word == "switch" or word == "endif" or word == "endswitch")
+      and "`$if` and `$switch`" or "Compile Time Execution"
+  elseif op == "@" and after:match("^[%a_]") then
+    return nil -- @pool, @builtin...: the word is the thing, LSP may know it
+  end
+  return operator_section[op]
+end
+
+local function show_manual(word, query)
+  query = query or manual_section[word]
   if not query or vim.fn.executable("c3doc") == 0 then
     vim.notify("No information available", vim.log.levels.INFO)
     return
@@ -164,7 +236,8 @@ local function show_manual(word)
         vim.notify("No information available", vim.log.levels.INFO)
         return
       end
-      lines[1] = lines[1]:gsub("%s*%[C3 [^%]]*%]", "") -- "### If statement"
+      -- "### If statement  [C3 0.8.5_1 manual]" -> "### If statement"
+      lines[1] = lines[1]:gsub("%s*%[C3 [^%]]*%]", ""):gsub("%s*{:[^}]*}", "")
       vim.lsp.util.open_floating_preview(lines, "markdown", {
         border = "rounded",
         focus_id = "c3_manual",
@@ -176,7 +249,24 @@ local function show_manual(word)
 end
 
 local function hover(bufnr)
+  local op_query = operator_at_cursor()
+  if op_query then
+    return show_manual(nil, op_query)
+  end
   local word = vim.fn.expand("<cword>")
+  -- `$if`, `$switch`, `$for`...: compile-time versions of the keywords
+  local col = vim.api.nvim_win_get_cursor(0)[2] + 1
+  local line = vim.api.nvim_get_current_line()
+  local s = col
+  while s > 1 and line:sub(s - 1, s - 1):match("[%w_]") do
+    s = s - 1
+  end
+  if line:sub(s - 1, s - 1) == "$" then
+    return show_manual(nil, line:sub(s - 2, s - 2) == "$" and "10_2_1 Builtin constants"
+      or (word == "if" or word == "switch" or word == "endif" or word == "endswitch")
+        and "`$if` and `$switch`"
+      or "Compile Time Execution")
+  end
   if #vim.lsp.get_clients({ bufnr = bufnr, method = "textDocument/hover" }) == 0 then
     return show_manual(word)
   end

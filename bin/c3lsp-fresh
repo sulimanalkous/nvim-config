@@ -1,0 +1,11 @@
+#!/bin/sh
+# c3lsp-fresh: start the C3 language server with a clean symbol index.
+#
+# Why: c3lsp 0.5.0 saves its stdlib index to ~/.cache/c3-lsp/stdlib and reloads
+# it with the function parameters missing, so hover and completion show
+# "fn printfn()" instead of "fn sz? printfn(String format, args...)".
+# Re-indexing costs about two seconds per start and answers correctly.
+#
+# nvim runs this (lua/plugins/lsp-config.lua) and passes C3_LSP_BIN.
+rm -f "${XDG_CACHE_HOME:-$HOME/.cache}"/c3-lsp/stdlib/*.json 2>/dev/null
+exec "${C3_LSP_BIN:-c3lsp}" "$@"

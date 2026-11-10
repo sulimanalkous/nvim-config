@@ -22,6 +22,13 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
+-- bootstrap.sh installs zls, c3c, c3fmt and c3lsp into ~/.local/bin. Make
+-- sure nvim sees them even when the shell's PATH doesn't include it.
+local local_bin = vim.fn.expand("~/.local/bin")
+if not vim.tbl_contains(vim.split(vim.env.PATH or "", ":"), local_bin) then
+  vim.env.PATH = local_bin .. ":" .. (vim.env.PATH or "")
+end
+
 require("vim-options")
 require("quickfix")
 require("c3") -- after quickfix: overrides c3 makeprg for loose files

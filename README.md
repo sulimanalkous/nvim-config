@@ -45,7 +45,9 @@ it just starts working on the next launch.
 
 | Language | Server binary | Install |
 |---|---|---|
-| Lua | `lua-language-server` | brew / apt / pkg (in `bootstrap.sh`) |
+| Lua | `lua-language-server` | MacPorts / brew / apt / pkg (in `bootstrap.sh`) |
+| Zig | `zls` | `zig` from MacPorts / brew; `zls` release, pinned (in `bootstrap.sh`) |
+| C3 | `c3lsp` + `c3c` | C3 release (with `c3fmt`) + `c3lsp` built with Go (in `bootstrap.sh`) |
 | Rust | `rust-analyzer` | `rustup component add rust-analyzer` |
 | Python | `pyright` | `npm i -g pyright` |
 | JavaScript/TypeScript | — | formatting only, via `prettier` |
@@ -53,6 +55,11 @@ it just starts working on the next launch.
 | Tailwind CSS | `tailwindcss-language-server` | `npm i -g tailwindcss-language-server` |
 | Ruby | `solargraph` | `gem install solargraph` |
 | Flutter/Dart | `flutter` SDK | opt-in: `./bootstrap.sh --all` |
+
+Zig and C3 tools that no package manager carries go into `~/.local/opt`,
+linked into `~/.local/bin`; nvim adds that folder to its own `PATH`, so they
+work even if your shell doesn't know about it. C3 files outside a project
+(no `project.json`) still get hover, completion and errors on save.
 
 ## Keybindings
 

@@ -62,25 +62,43 @@ return {
           cmd = { "zls" },
           root_markers = { "build.zig", "build.zig.zon", ".git" },
         },
-        -- c3lsp-fresh wraps c3lsp and clears its stdlib cache first: c3lsp
-        -- 0.5.0 reloads that cache without function parameters, so hover
-        -- would show "fn printfn()". The c3c and stdlib paths are passed in
-        -- so hover, completion and go-to-definition reach into std::.
+        -- C3: c3lsp started through bin/c3lsp-fresh (in this repo), which
+        -- clears c3lsp's stdlib cache first: c3lsp 0.5.0 reloads that cache
+        -- without function parameters, so hover would show "fn printfn()".
+        -- c3lsp is found on PATH or in ~/.local/bin (where bootstrap.sh puts
+        -- it); without it the entry is skipped like any missing server.
+        -- c3c and its stdlib are passed in so hover/completion reach std::.
         c3_lsp = (function()
-          local cmd = { "c3lsp-fresh" }
+          local bin = vim.fn.exepath("c3lsp")
+          if bin == "" and vim.fn.executable(vim.fn.expand("~/.local/bin/c3lsp")) == 1 then
+            bin = vim.fn.expand("~/.local/bin/c3lsp")
+          end
+          if bin == "" then
+            return { cmd = { "c3lsp" } } -- not installed: skipped below
+          end
+          local cmd = { vim.fs.joinpath(vim.fn.stdpath("config"), "bin", "c3lsp-fresh") }
           local c3c = vim.fn.exepath("c3c")
           if c3c ~= "" then
-            c3c = vim.fn.resolve(c3c)
-            -- -c3c-path is the binary itself; -stdlib-path is the lib/ folder
-            -- (c3lsp appends "std" on its own).
-            vim.list_extend(cmd, { "-c3c-path", c3c })
-            local lib = vim.fs.joinpath(vim.fs.dirname(c3c), "lib")
-            if vim.fn.isdirectory(vim.fs.joinpath(lib, "std")) == 1 then
-              vim.list_extend(cmd, { "-stdlib-path", lib })
+            -- -c3c-path is the binary itself; -stdlib-path is the folder that
+            -- holds std/ (c3lsp appends "std"). Release archives keep it in
+            -- <c3c dir>/lib, a cmake install (brew) in <prefix>/lib/c3.
+            local candidates = {}
+            for _, path in ipairs({ vim.fn.resolve(c3c), c3c }) do
+              local dir = vim.fs.dirname(path)
+              table.insert(candidates, vim.fs.joinpath(dir, "lib"))
+              table.insert(candidates, vim.fs.joinpath(dir, "..", "lib", "c3"))
+            end
+            vim.list_extend(cmd, { "-c3c-path", vim.fn.resolve(c3c) })
+            for _, lib in ipairs(candidates) do
+              if vim.fn.isdirectory(vim.fs.joinpath(lib, "std")) == 1 then
+                vim.list_extend(cmd, { "-stdlib-path", vim.fs.normalize(lib) })
+                break
+              end
             end
           end
           return {
             cmd = cmd,
+            cmd_env = { C3_LSP_BIN = bin },
             filetypes = { "c3", "c3i" },
             -- Use the c3c project root when there is one; for a loose file
             -- (learning, no project.json) use the file's own folder, so the
@@ -165,6 +183,7 @@ return {
         if vim.fn.executable(opts.cmd[1]) == 1 then
           vim.lsp.config(name, {
             cmd = opts.cmd,
+            cmd_env = opts.cmd_env,
             filetypes = opts.filetypes,
             settings = opts.settings,
             init_options = opts.init_options,

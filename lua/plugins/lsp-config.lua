@@ -82,7 +82,14 @@ return {
           return {
             cmd = cmd,
             filetypes = { "c3", "c3i" },
-            root_markers = { "project.json", "manifest.json", ".git" },
+            -- Use the c3c project root when there is one; for a loose file
+            -- (learning, no project.json) use the file's own folder, so the
+            -- server still indexes it and hover/completion work. Errors for
+            -- loose files come from lua/c3.lua instead.
+            root_dir = function(bufnr, on_dir)
+              local root = vim.fs.root(bufnr, { "project.json", "manifest.json" })
+              on_dir(root or vim.fs.dirname(vim.api.nvim_buf_get_name(bufnr)))
+            end,
           }
         end)(),
         rust_analyzer = {
@@ -162,6 +169,7 @@ return {
             settings = opts.settings,
             init_options = opts.init_options,
             root_markers = opts.root_markers,
+            root_dir = opts.root_dir,
           })
           vim.lsp.enable(name)
         end

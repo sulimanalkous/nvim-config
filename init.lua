@@ -24,6 +24,7 @@ vim.opt.rtp:prepend(lazypath)
 
 require("vim-options")
 require("quickfix")
+require("c3") -- after quickfix: overrides c3 makeprg for loose files
 require("lazy").setup("plugins")
 
 -- After the plugins are loaded: apply the saved theme and map <leader>tt.

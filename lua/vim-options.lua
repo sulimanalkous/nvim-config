@@ -105,3 +105,15 @@ local function toggle_terminal()
   vim.cmd("startinsert")
 end
 map({ "n", "t" }, "<C-x>t", toggle_terminal, { desc = "Toggle terminal" })
+
+-- Diagnostics, Helix-style: ]d / [d next / previous (built into nvim, also
+-- ]D / [D for last / first). ]e / [e do the same but stop only at errors,
+-- skipping warnings and hints. The message pops up where you land
+-- (vim.diagnostic.config jump.on_jump in lua/plugins/lsp-config.lua).
+local function jump_error(count)
+  return function()
+    vim.diagnostic.jump({ count = count * vim.v.count1, severity = vim.diagnostic.severity.ERROR })
+  end
+end
+map("n", "]e", jump_error(1), { desc = "Next error" })
+map("n", "[e", jump_error(-1), { desc = "Previous error" })

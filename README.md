@@ -86,6 +86,8 @@ too: `C-x` is the prefix, exactly like in Emacs.
 | `<space>fb` | open buffer list |
 | `<C-n>` | toggle file explorer |
 | `gd` / `gr` / `K` | go to definition / references / hover |
+| `]d` / `[d` | next / previous diagnostic, message pops up (`]D` / `[D`: last / first) |
+| `]e` / `[e` | next / previous **error** only, skips warnings |
 | `<space>e` | show diagnostics |
 | `<space>rn` | rename symbol |
 | `<space>ca` | code action |

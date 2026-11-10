@@ -50,6 +50,13 @@ return {
         underline = true,
         update_in_insert = false,
         severity_sort = true,
+        -- ]d [d ]e [e (Helix-style jumps): show the message where you land,
+        -- not just the underline. The popup closes when the cursor moves.
+        jump = {
+          on_jump = function(_, bufnr)
+            vim.diagnostic.open_float({ bufnr = bufnr, scope = "cursor", focus = false })
+          end,
+        },
       })
 
       -- Servers are installed by you (bootstrap.sh / brew / apt / pkg / npm),

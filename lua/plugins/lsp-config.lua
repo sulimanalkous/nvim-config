@@ -62,6 +62,29 @@ return {
           cmd = { "zls" },
           root_markers = { "build.zig", "build.zig.zon", ".git" },
         },
+        -- c3lsp-fresh wraps c3lsp and clears its stdlib cache first: c3lsp
+        -- 0.5.0 reloads that cache without function parameters, so hover
+        -- would show "fn printfn()". The c3c and stdlib paths are passed in
+        -- so hover, completion and go-to-definition reach into std::.
+        c3_lsp = (function()
+          local cmd = { "c3lsp-fresh" }
+          local c3c = vim.fn.exepath("c3c")
+          if c3c ~= "" then
+            c3c = vim.fn.resolve(c3c)
+            -- -c3c-path is the binary itself; -stdlib-path is the lib/ folder
+            -- (c3lsp appends "std" on its own).
+            vim.list_extend(cmd, { "-c3c-path", c3c })
+            local lib = vim.fs.joinpath(vim.fs.dirname(c3c), "lib")
+            if vim.fn.isdirectory(vim.fs.joinpath(lib, "std")) == 1 then
+              vim.list_extend(cmd, { "-stdlib-path", lib })
+            end
+          end
+          return {
+            cmd = cmd,
+            filetypes = { "c3", "c3i" },
+            root_markers = { "project.json", "manifest.json", ".git" },
+          }
+        end)(),
         rust_analyzer = {
           cmd = { "rust-analyzer" },
           settings = {
@@ -135,6 +158,7 @@ return {
         if vim.fn.executable(opts.cmd[1]) == 1 then
           vim.lsp.config(name, {
             cmd = opts.cmd,
+            filetypes = opts.filetypes,
             settings = opts.settings,
             init_options = opts.init_options,
             root_markers = opts.root_markers,

@@ -40,4 +40,19 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
+-- c3c prints errors as "file:line:col: error: msg" after a source excerpt;
+-- keep the diagnostic lines, drop the excerpt.
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "c3",
+  callback = function()
+    vim.bo.makeprg = "c3c build"
+    vim.bo.errorformat = table.concat({
+      "%f:%l:%c: error: %m",
+      "%f:%l:%c: warning: %m",
+      "%f:%l:%c: note: %m",
+      "%-G%.%#",
+    }, ",")
+  end,
+})
+
 vim.keymap.set("n", "<leader>cb", "<cmd>make<CR>", { desc = "Build (make) and fill error list" })

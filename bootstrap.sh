@@ -169,6 +169,18 @@ if ! have c3lsp && [ ! -x "$BIN/c3lsp" ]; then
   fi
 fi
 
+# --- c3doc / zdoc ------------------------------------------------------------
+# Search the installed C3 / Zig manuals and std source (bin/ldoc.py, one
+# script, the language comes from the name it runs as). nvim's K uses c3doc
+# to explain C3 keywords, types and operators. Needs python3 (on macOS it
+# comes with the Xcode command line tools).
+for tool in c3doc zdoc; do
+  if ! have "$tool" && [ ! -e "$BIN/$tool" ]; then
+    say "Linking $tool..."
+    ln -s "$(cd "$(dirname "$0")" && pwd)/bin/ldoc.py" "$BIN/$tool"
+  fi
+done
+
 # --- Optional: Flutter/Dart -------------------------------------------------
 # Big install, so it's opt-in. flutter-tools.nvim is already configured to
 # enable itself automatically if it finds `flutter` on PATH.

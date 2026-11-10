@@ -61,6 +61,11 @@ linked into `~/.local/bin`; nvim adds that folder to its own `PATH`, so they
 work even if your shell doesn't know about it. C3 files outside a project
 (no `project.json`) still get hover, completion and errors on save.
 
+`bootstrap.sh` also links **`c3doc`** and **`zdoc`** (`bin/ldoc.py`): search the
+installed C3 / Zig manuals and std source from the shell, e.g. `c3doc defer`,
+`zdoc -s ArrayList`. In C3 files, `K` on a keyword, type or operator (`fn`,
+`int`, `??`, `!!`, `::`, `$if`...) shows its section of the C3 manual.
+
 ## Keybindings
 
 Leader key is **space** — press it and **which-key** pops up every binding.

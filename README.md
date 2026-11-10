@@ -79,6 +79,7 @@ too: `C-x` is the prefix, exactly like in Emacs.
 | `C-x 2` / `C-x 3` | split below / split right |
 | `C-x o` | other window |
 | `C-x 0` / `C-x 1` | close window / close other windows |
+| `C-x t` | toggle a terminal at the bottom (same shell kept; works inside it too) |
 | `<Esc><Esc>` in a terminal | leave terminal mode (the `<C-\><C-n>` way, typeable) |
 | `<C-p>` | find files |
 | `<space>fg` | live grep (search text in project) |

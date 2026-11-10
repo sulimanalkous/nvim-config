@@ -6,6 +6,7 @@ return {
       preset = "modern",
       delay = 300,
       spec = {
+        { "<C-x>", group = "Emacs C-x" },
         { "g", group = "Go to" },
         { "<leader>b", group = "Buffer" },
         { "<leader>c", group = "Code / Crates" },
@@ -21,9 +22,11 @@ return {
       {
         "<leader>?",
         function()
-          require("which-key").show({ global = false })
+          -- every keymap: global ones (all the C-x chords) and this
+          -- buffer's own (LSP, Ruby...), not just the buffer-local ones
+          require("which-key").show({ global = true })
         end,
-        desc = "Buffer Local Keymaps (which-key)",
+        desc = "All keymaps (which-key)",
       },
     },
   },

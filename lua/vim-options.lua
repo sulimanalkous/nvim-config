@@ -76,3 +76,32 @@ map("n", "<C-x>1", "<C-w>o", { desc = "Close other windows" })
 -- often swallowed by the terminal emulator or tmux, so offer a typeable way.
 -- A single <Esc> still reaches whatever runs in the shell.
 map("t", "<Esc><Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
+
+-- C-x t: toggle a terminal at the bottom, like a popup vterm/eshell. The same
+-- shell is kept between toggles (its history and running jobs survive); type
+-- `exit` in it to end it, and the next C-x t starts a fresh one. Works from
+-- inside the terminal too, so the same chord hides it again.
+local term_buf
+local function toggle_terminal()
+  if term_buf and vim.api.nvim_buf_is_valid(term_buf) then
+    local win = vim.fn.bufwinid(term_buf)
+    if win ~= -1 then
+      if #vim.api.nvim_list_wins() > 1 then
+        vim.api.nvim_win_close(win, false)
+      else
+        vim.cmd("buffer #") -- last window: show the previous buffer instead
+      end
+      return
+    end
+    vim.cmd("botright split")
+    vim.api.nvim_win_set_buf(0, term_buf)
+  else
+    vim.cmd("botright split")
+    vim.cmd("terminal")
+    term_buf = vim.api.nvim_get_current_buf()
+    vim.bo[term_buf].buflisted = false -- keep it out of C-x b / C-x n
+  end
+  vim.api.nvim_win_set_height(0, math.max(10, math.floor(vim.o.lines * 0.3)))
+  vim.cmd("startinsert")
+end
+map({ "n", "t" }, "<C-x>t", toggle_terminal, { desc = "Toggle terminal" })

@@ -114,3 +114,99 @@ vim.api.nvim_create_autocmd("FileType", {
     bo.indentkeys = "0{,0},0),0],!^F,o,O,e,0=case,0=default"
   end,
 })
+
+-- K: c3lsp explains functions, constants, modules and your own symbols, but
+-- has nothing for the language itself (fn, switch, defer, int, void...). For
+-- those, K shows the matching section of the official C3 manual instead,
+-- found by c3doc (~/.local/bin/c3doc, searches the installed C3's docs).
+-- K twice enters the popup to scroll it, as with LSP hover.
+local manual_section = {
+  fn = "5_3_1 Regular functions", void = "3_2_2 Basic types",
+  bool = "Booleans", ["true"] = "Booleans", ["false"] = "Booleans",
+  float = "Floating point types", double = "Floating point types",
+  float16 = "Floating point types", bfloat = "Floating point types",
+  float128 = "Floating point types",
+  null = "Pointer types", any = "The any type", typeid = "The typeid type",
+  fault = "The fault type", faultdef = "Faults",
+  ["if"] = "If statement", ["else"] = "If statement",
+  ["for"] = "3_1_3 For Loop", foreach = "3_1_4 Foreach Loop",
+  foreach_r = "3_1_4 Foreach Loop", ["while"] = "3_1_5 While Loop",
+  ["do"] = "3_1_5 While Loop", ["return"] = "Return statement",
+  ["break"] = "Break, continue, nextcase", continue = "Break, continue, nextcase",
+  nextcase = "Break, continue, nextcase", case = "Switch statement",
+  default = "Switch statement", switch = "Switch statement",
+  struct = "Struct types", union = "Union types", enum = "Enum and constsets",
+  constset = "Enum and constsets", bitstruct = "Bitstructs",
+  interface = "Interface types", typedef = "Typedef - Distinct type definitions",
+  alias = "Type aliases", macro = "Macros", import = "Modules And Import",
+  module = "Modules And Import", defer = "Defer", try = "Optional",
+  catch = "Optional", const = "Constants", assert = "Contracts",
+}
+for _, t in ipairs({ "ichar", "char", "short", "ushort", "int", "uint", "long", "ulong",
+  "int128", "uint128", "iptr", "uptr", "sz", "usz" }) do
+  manual_section[t] = "Integer types"
+end
+
+local function show_manual(word)
+  local query = manual_section[word]
+  if not query or vim.fn.executable("c3doc") == 0 then
+    vim.notify("No information available", vim.log.levels.INFO)
+    return
+  end
+  vim.system({ "c3doc", "-d", "-n", "1", "-m", "3000", query }, { text = true }, function(res)
+    vim.schedule(function()
+      local lines = vim.split(res.stdout or "", "\n")
+      -- drop c3doc's own header (size line, "Reference from..."), keep the section
+      while #lines > 0 and not lines[1]:match("^###") do
+        table.remove(lines, 1)
+      end
+      if #lines == 0 then
+        vim.notify("No information available", vim.log.levels.INFO)
+        return
+      end
+      lines[1] = lines[1]:gsub("%s*%[C3 [^%]]*%]", "") -- "### If statement"
+      vim.lsp.util.open_floating_preview(lines, "markdown", {
+        border = "rounded",
+        focus_id = "c3_manual",
+        max_width = math.min(100, math.floor(vim.o.columns * 0.8)),
+        max_height = math.floor(vim.o.lines * 0.6),
+      })
+    end)
+  end)
+end
+
+local function hover(bufnr)
+  local word = vim.fn.expand("<cword>")
+  if #vim.lsp.get_clients({ bufnr = bufnr, method = "textDocument/hover" }) == 0 then
+    return show_manual(word)
+  end
+  local params = function(client)
+    return vim.lsp.util.make_position_params(0, client.offset_encoding)
+  end
+  vim.lsp.buf_request_all(bufnr, "textDocument/hover", params, function(results)
+    for _, r in pairs(results) do
+      local c = r.result and r.result.contents
+      if c and (c.value or c[1] or (type(c) == "string" and c ~= "")) then
+        return vim.lsp.buf.hover() -- the server knows it: normal LSP popup
+      end
+    end
+    show_manual(word)
+  end)
+end
+
+local function map_hover(bufnr)
+  vim.keymap.set("n", "K", function() hover(bufnr) end,
+    { buffer = bufnr, desc = "Hover: LSP, or the C3 manual for keywords/types" })
+end
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = { "c3", "c3i" },
+  callback = function(args) map_hover(args.buf) end,
+})
+-- lsp-config maps K to plain LSP hover on LspAttach; put ours back after it.
+vim.api.nvim_create_autocmd("LspAttach", {
+  callback = function(args)
+    if vim.bo[args.buf].filetype == "c3" or vim.bo[args.buf].filetype == "c3i" then
+      vim.schedule(function() map_hover(args.buf) end)
+    end
+  end,
+})

@@ -95,3 +95,22 @@ vim.api.nvim_create_autocmd("LspAttach", {
     end)
   end,
 })
+
+-- Electric indent, like Emacs: each line lands at the right indentation as
+-- you type (on Enter, and when a line starts with `}`), using the C3
+-- tree-sitter indent rules. Indent with tabs, as c3fmt does, so saving
+-- (format on save) does not shift what you typed.
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = { "c3", "c3i" },
+  callback = function(args)
+    local bo = vim.bo[args.buf]
+    bo.expandtab = false
+    bo.tabstop = 4
+    bo.shiftwidth = 4
+    bo.softtabstop = 0
+    bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+    -- Re-indent on `case`/`default` rather than on every ":", which would
+    -- also fire on the `::` of `io::printn` while the line is half-typed.
+    bo.indentkeys = "0{,0},0),0],!^F,o,O,e,0=case,0=default"
+  end,
+})
